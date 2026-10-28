@@ -1,4 +1,4 @@
-# FactCheck (Android) v2.5
+# FactCheck (Android) v2.6
 
 Floating, non-intrusive, on-screen fact checker powered by **Gemini Flash-Lite** or **Groq** (`qwen/qwen3.8-27b`).
 
