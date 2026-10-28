@@ -2,7 +2,7 @@
 
 Floating, non-intrusive, on-screen fact checker powered by **Gemini Flash-Lite** or **Groq** (`qwen/qwen3.8-27b`).
 
-Tap the slim side-handle glued to the right edge of any screen → the app takes
+Tap the slim side-handle glued to the **left** edge of any screen → the app takes
 **one screenshot using the accessibility screen-capture capability**, sends it
 to the Gemini API with your own key, and shows the verdicts in a small floating
 panel that doesn't block your touch anywhere else.
@@ -29,9 +29,10 @@ panel that doesn't block your touch anywhere else.
 
 ## What the app does
 
-1. **Hidden sidebar trigger** — a translucent pill on the right edge (draggable).
+1. **Hidden sidebar trigger** — a thin translucent bar on the left edge (draggable).
    - **Tap** → one-shot fact-check.
    - **Long-press** → open the app.
+   - **Drag** → move it (fix works from any position).
 2. **Provider** — pick **Gemini** or **Groq** in the app (top card); each has
    its own encrypted key + model.
    - **Gemini** — default model **`gemini-3.5-flash-lite`**. If that id is ever
@@ -86,7 +87,7 @@ Direct Gradle: `.\gradlew.bat assembleRelease` →
 3. Tap *Enable accessibility service* → Settings → Accessibility →
    **FactCheck — one-shot screen check** → toggle ON → back.
    (Requires Android 11+ — the app itself is compiled for API 30+ minimum.)
-4. The side handle appears at the right edge. Open any screen with content
+4. The side handle appears at the left edge. Open any screen with content
    worth checking and **tap the handle**.
 
 ## If something does not work
