@@ -1,5 +1,6 @@
 package com.local.factcheck.util
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -8,6 +9,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.text.Spannable
@@ -16,13 +19,17 @@ import android.text.style.ForegroundColorSpan
 import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
+import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -81,6 +88,8 @@ class Overlay(
     private var lastResultText = ""
     private var lastState: PanelState = PanelState.Idle
     private var autoHide: Runnable? = null
+    private var breatheAnim: ValueAnimator? = null
+    private var shimmerAnim: ValueAnimator? = null
 
     val visible: Boolean get() = handle != null
 
@@ -115,8 +124,28 @@ class Overlay(
         }
         handle = v
         handleParams = lp
+        startBreathing(v)
         v.setOnTouchListener(handleTouchListener())
         claimHandleFromGestures(v)
+    }
+
+    /** Slow breathing halo (alpha loop). Runs only while the handle is shown. */
+    private fun startBreathing(v: View) {
+        val glow = v.findViewById<View>(R.id.handle_glow) ?: return
+        breatheAnim?.cancel()
+        val a = ValueAnimator.ofFloat(0.18f, 0.85f).apply {
+            duration = 1600
+            repeatMode = ValueAnimator.REVERSE
+            repeatCount = ValueAnimator.INFINITE
+            addUpdateListener { anim -> glow.alpha = anim.animatedValue as Float }
+        }
+        a.start()
+        breatheAnim = a
+    }
+
+    private fun stopBreathing() {
+        breatheAnim?.cancel()
+        breatheAnim = null
     }
 
     /** Excludes the handle's bounds from the system back-gesture swipe zone. */
@@ -137,16 +166,22 @@ class Overlay(
 
     private fun handleTouchListener() = View.OnTouchListener { view, ev ->
         val lp = handleParams ?: return@OnTouchListener false
+        val core = view.findViewById<View>(R.id.handle_core)
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 downY = ev.rawY
                 handleYOffset = lp.y
                 dragging = false
+                core?.animate()?.cancel()
+                core?.animate()?.scaleX(0.82f)?.scaleY(0.82f)?.setDuration(90)?.start()
             }
             MotionEvent.ACTION_MOVE -> {
                 val d = ev.rawY - downY
                 if (!dragging && abs(d) > dp(10)) dragging = true
                 if (dragging) {
+                    core?.animate()?.cancel()
+                    core?.scaleX = 1f
+                    core?.scaleY = 1f
                     handleYOffset += d.toInt()
                     lp.gravity = Gravity.END or Gravity.TOP
                     lp.y = handleYOffset
@@ -158,9 +193,18 @@ class Overlay(
                 }
             }
             MotionEvent.ACTION_UP -> {
+                core?.animate()?.cancel()
+                core?.animate()?.scaleX(1f)?.scaleY(1f)?.setDuration(140)
+                    ?.setInterpolator(DecelerateInterpolator(1.5f))?.start()
                 if (!dragging) {
+                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                     if (ev.eventTime - ev.downTime > 500L) onHandleLongPress() else onHandleTap()
                 }
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                core?.animate()?.cancel()
+                core?.scaleX = 1f
+                core?.scaleY = 1f
             }
             else -> {}
         }
@@ -208,6 +252,9 @@ class Overlay(
         render(v, state)
 
         if (isNew) {
+            v.alpha = 0f
+            v.scaleX = 0.9f
+            v.scaleY = 0.9f
             try {
                 wm.addView(v, lp)
             } catch (t: Throwable) {
@@ -217,6 +264,12 @@ class Overlay(
                 // The panel can't be drawn — at least make the state visible.
                 Toast.makeText(ctx, "FactCheck: " + describe(state), Toast.LENGTH_LONG).show()
                 return
+            }
+            mainHandler.post {
+                v.animate().alpha(1f).scaleX(1f).scaleY(1f)
+                    .setDuration(240)
+                    .setInterpolator(DecelerateInterpolator(1.6f))
+                    .start()
             }
         } else {
             try {
@@ -260,22 +313,43 @@ class Overlay(
         }
     }
 
-    fun hidePanel() {
+    fun hidePanel() = hidePanelInternal(animated = true)
+
+    private fun hidePanelInternal(animated: Boolean) {
         autoHide?.let { mainHandler.removeCallbacks(it) }
         autoHide = null
-        panel?.let {
-            try {
-                wm.removeView(it)
-            } catch (_: Throwable) {
-            }
-        }
+        stopShimmer()
+        val v = panel ?: return
         panel = null
         panelParams = null
         lastState = PanelState.Idle
+        if (!animated) {
+            v.animate().cancel()
+            try {
+                wm.removeView(v)
+            } catch (_: Throwable) {
+            }
+            return
+        }
+        v.animate().cancel()
+        v.animate()
+            .alpha(0f)
+            .scaleX(0.95f)
+            .scaleY(0.95f)
+            .setDuration(170)
+            .setInterpolator(AccelerateInterpolator(1.6f))
+            .withEndAction {
+                try {
+                    wm.removeView(v)
+                } catch (_: Throwable) {
+                }
+            }
+            .start()
     }
 
     fun hideAll() {
-        hidePanel()
+        stopBreathing()
+        hidePanelInternal(animated = false)
         handle?.let {
             try {
                 wm.removeView(it)
@@ -314,12 +388,12 @@ class Overlay(
     private fun render(v: View, state: PanelState) {
         val body = v.findViewById<LinearLayout>(R.id.panel_body) ?: return
         val title = v.findViewById<TextView>(R.id.panel_title_text)
+        stopShimmer()
         body.removeAllViews()
         when (state) {
             is PanelState.Checking -> {
                 title?.text = ctx.getString(R.string.app_name) + "  •  " + state.model
-                body.addView(spinner())
-                body.addView(centerText("Reading the screen…", R.color.panel_text_mute))
+                body.addView(skeleton())
             }
             is PanelState.Hint -> {
                 title?.setText(R.string.app_name)
@@ -339,6 +413,11 @@ class Overlay(
             }
             is PanelState.Result -> renderResult(v, body, state)
             is PanelState.Idle -> {}
+        }
+        // Soft content crossfade whenever the panel's purpose changes.
+        body.alpha = 0f
+        mainHandler.post {
+            body.animate().alpha(1f).setDuration(190).start()
         }
     }
 
@@ -362,7 +441,7 @@ class Overlay(
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
             }
-            r.claims.forEach { c -> chipRow.addView(chip(claimSymbol(c.verdict))) }
+            r.claims.forEach { c -> chipRow.addView(chip(claimSymbol(c.verdict), verdictColor(c.verdict))) }
             body.addView(chipRow)
 
             if (r.overall.isNotBlank()) body.addView(textWrapped(r.overall, R.color.panel_text))
@@ -482,12 +561,18 @@ class Overlay(
 
     /* ============================ builders ============================ */
 
-    private fun chip(sym: String): TextView {
+    private fun chip(sym: String, color: Int): TextView {
         val t = TextView(ctx)
         t.text = " $sym "
-        t.textSize = 11f
+        t.textSize = 12f
+        t.typeface = Typeface.DEFAULT_BOLD
         t.setTextColor(Color.WHITE)
-        t.background = ContextCompat.getDrawable(ctx, R.drawable.chip_bg)?.mutate()
+        t.setShadowLayer(dp(4).toFloat(), 0f, 0f, color)
+        t.background = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = dp(10).toFloat()
+            setColor(Color.argb(0x38, Color.red(color), Color.green(color), Color.blue(color)))
+        }
         t.setPadding(dp(9), dp(3), dp(9), dp(3))
         val lp = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -516,18 +601,84 @@ class Overlay(
     private fun mixed(value: String, colorRes: Int): TextView = TextView(ctx).apply {
         text = "⚠  " + value
         textSize = 12f
-        setTextColor(colorOf(colorRes))
+        val color = ContextCompat.getColor(ctx, colorRes)
+        setTextColor(color)
+        setShadowLayer(dp(3).toFloat(), 0f, 0f, color)
         setPadding(0, dp(4), 0, dp(2))
     }
 
-    private fun spinner(): ProgressBar = ProgressBar(ctx).apply {
-        isIndeterminate = true
-        val lp = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
+    /* ============================ shimmer skeleton ============================ */
+
+    /**
+     * Glassy "checking the screen…" placeholder: stacked rounded bars with a
+     * light-sweep animation. The sweep runs only while this view is on screen
+     * (see [stopShimmer]).
+     */
+    private fun skeleton(): View {
+        val container = FrameLayout(ctx).apply {
+            clipChildren = true
+            clipToPadding = true
+        }
+        val bars = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(0, dp(2), 0, dp(2))
+        }
+        intArrayOf(140, 235, 206, 160, 228).forEachIndexed { i, w ->
+            if (i == 2) bars.addView(gap(8))
+            val bar = View(ctx).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(w), dp(11)).apply {
+                    topMargin = dp(6)
+                }
+                background = GradientDrawable().apply {
+                    setColor(ContextCompat.getColor(ctx, R.color.skel_bar))
+                    cornerRadius = dp(6).toFloat()
+                }
+            }
+            bars.addView(bar)
+        }
+        container.addView(
+            bars,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
         )
-        lp.gravity = Gravity.CENTER
-        layoutParams = lp
+
+        val sweep = View(ctx).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(
+                    0x00FFFFFF,
+                    ContextCompat.getColor(ctx, R.color.shimmer_glint),
+                    0x00FFFFFF
+                )
+            )
+            layoutParams = FrameLayout.LayoutParams(
+                dp(110), ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            translationX = -dp(110).toFloat()
+        }
+        container.addView(sweep)
+
+        container.post {
+            val w = container.width
+            if (w < dp(40)) return@post
+            shimmerAnim?.cancel()
+            val anim = ValueAnimator.ofFloat(-dp(110).toFloat(), (w + dp(6)).toFloat()).apply {
+                duration = 1500
+                repeatCount = ValueAnimator.INFINITE
+                interpolator = LinearInterpolator()
+                addUpdateListener { a -> sweep.translationX = a.animatedValue as Float }
+            }
+            anim.start()
+            shimmerAnim = anim
+        }
+        return container
+    }
+
+    private fun stopShimmer() {
+        shimmerAnim?.cancel()
+        shimmerAnim = null
     }
 
     private fun gap(h: Int): View = View(ctx).apply {

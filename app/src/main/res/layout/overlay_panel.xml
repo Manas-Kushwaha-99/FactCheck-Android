@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/panel_root"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -22,8 +23,7 @@
             android:layout_height="16dp"
             android:contentDescription="@string/app_name"
             android:src="@drawable/ic_factcheck_mark"
-            app:tint="@color/panel_accent"
-            xmlns:app="http://schemas.android.com/apk/res-auto" />
+            app:tint="@color/panel_accent" />
 
         <TextView
             android:id="@+id/panel_title_text"
@@ -42,18 +42,28 @@
             android:id="@+id/panel_close"
             android:layout_width="34dp"
             android:layout_height="34dp"
+            android:layout_marginEnd="-6dp"
             android:gravity="center"
             android:contentDescription="@string/app_name"
             android:text="✕"
             android:textColor="@color/panel_text_mute"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
+
+    <View
+        android:id="@+id/panel_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/divider_accent" />
 
     <ScrollView
         android:id="@+id/panel_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="10dp"
+        android:scrollbars="none">
 
         <LinearLayout
             android:id="@+id/panel_body"

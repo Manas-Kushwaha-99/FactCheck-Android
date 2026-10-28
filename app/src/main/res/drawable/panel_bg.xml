@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <corners android:radius="22dp" />
-    <solid android:color="@color/panel_bg" />
-    <stroke android:width="1dp" android:color="@color/panel_stroke" />
-</shape>
+<!-- Neon glass: dark gradient glass with a 2dp luminous ring bleeding at the edges. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <solid android:color="@color/panel_glow" />
+        </shape>
+    </item>
+    <item android:left="2dp" android:top="2dp" android:right="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="22dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="@color/panel_grad_top"
+                android:endColor="@color/panel_grad_bottom" />
+            <stroke android:width="1dp" android:color="@color/panel_stroke" />
+        </shape>
+    </item>
+</layer-list>

@@ -5,10 +5,27 @@
 
     <!-- Floating panel (always dark for overlay contrast) -->
     <color name="panel_bg">#F0101822</color>
-    <color name="panel_stroke">#3394A3B8</color>
+    <color name="panel_stroke">#5538BDF8</color>
     <color name="panel_text">#F1F5F9</color>
     <color name="panel_text_mute">#94A3B8</color>
     <color name="panel_accent">#38BDF8</color>
+
+    <!-- Neon glass panel: glow ring + dark gradient glass -->
+    <color name="panel_glow">#3338BDF8</color>
+    <color name="panel_grad_top">#F2151E2E</color>
+    <color name="panel_grad_bottom">#F00C111B</color>
+
+    <!-- Side handle: layered glow + luminous core -->
+    <color name="handle_glow_outer">#1238BDF8</color>
+    <color name="handle_glow_mid">#2E38BDF8</color>
+    <color name="handle_glow_core">#5C38BDF8</color>
+    <color name="handle_core_top">#8C38BDF8</color>
+    <color name="handle_core_bottom">#4D0EA5E9</color>
+    <color name="handle_core_stroke">#8038BDF8</color>
+
+    <!-- Shimmer skeleton (checking state) -->
+    <color name="skel_bar">#22FFFFFF</color>
+    <color name="shimmer_glint">#42FFFFFF</color>
 
     <!-- Verdicts -->
     <color name="verdict_true">#4ADE80</color>
