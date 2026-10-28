@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme overrides for the main screen -->
+    <color name="status_text">#E2E8F0</color>
+</resources>

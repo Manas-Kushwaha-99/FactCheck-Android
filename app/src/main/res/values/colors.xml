@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher / accent -->
+    <color name="ic_launcher_background">#0F172A</color>
+
+    <!-- Floating panel (always dark for overlay contrast) -->
+    <color name="panel_bg">#F0101822</color>
+    <color name="panel_stroke">#3394A3B8</color>
+    <color name="panel_text">#F1F5F9</color>
+    <color name="panel_text_mute">#94A3B8</color>
+    <color name="panel_accent">#38BDF8</color>
+
+    <!-- Verdicts -->
+    <color name="verdict_true">#4ADE80</color>
+    <color name="verdict_false">#F87171</color>
+    <color name="verdict_warn">#FBBF24</color>
+    <color name="verdict_unknown">#94A3B8</color>
+
+    <!-- Main screen status rows -->
+    <color name="status_text">#334155</color>
+</resources>

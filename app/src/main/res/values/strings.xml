@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FactCheck</string>
+
+    <string name="subtitle">Floating fact checker — tap the side handle for a one-shot screen check (no recording)</string>
+
+    <string name="accessibility_label">FactCheck — one-shot screen check</string>
+    <string name="accessibility_desc">
+        FactCheck uses the screen-capture accessibility capability for a single
+        screenshot ONLY when you tap its floating side handle. It never runs a
+        background recording, never reads window content, and never watches
+        your typing.
+    </string>
+
+    <string name="status_card_title">Status</string>
+    <string name="card_gemini">Gemini</string>
+    <string name="card_service">Access service</string>
+
+    <string name="hint_api_key">Gemini API key</string>
+    <string name="hint_model">Model (empty = latest Flash-Lite)</string>
+    <string name="btn_save_key">Save</string>
+    <string name="btn_test_key">Test key</string>
+    <string name="desc_key_secure">Stored with device Keystore-backed encryption. Only used for Gemini API calls from this device.</string>
+
+    <string name="btn_enable_a11y">Enable accessibility service</string>
+    <string name="btn_check_now">Fact-check this screen</string>
+
+    <string name="one_shot_note">
+        How screen access works: each tap of the floating handle captures ONE
+        screenshot and sends it straight to Gemini. Nothing is recorded
+        in between — no video, no continuous monitoring, no screen content
+        stored on the device.
+    </string>
+
+    <string name="privacy_note">
+        Screenshots are sent to the selected AI provider (Gemini or Groq) using
+        your API key to produce the fact-check. Live search runs through
+        DuckDuckGo from your device. The app stores nothing and shows verdicts
+        in a small floating panel.
+    </string>
+
+    <string name="saved_ok">Saved</string>
+    <string name="key_test_ok">Key works with %1$s</string>
+    <string name="key_test_err">Key error: %1$s</string>
+
+    <string name="panel_recheck">Re-check</string>
+    <string name="panel_copy">Copy</string>
+    <string name="panel_open">Open app</string>
+    <string name="panel_close_desc">Close panel</string>
+</resources>
