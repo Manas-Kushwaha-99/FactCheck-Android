@@ -15,13 +15,8 @@
     <color name="panel_grad_top">#F2151E2E</color>
     <color name="panel_grad_bottom">#F00C111B</color>
 
-    <!-- Side handle: layered glow + luminous core -->
-    <color name="handle_glow_outer">#1238BDF8</color>
-    <color name="handle_glow_mid">#2E38BDF8</color>
-    <color name="handle_glow_core">#5C38BDF8</color>
-    <color name="handle_core_top">#8C38BDF8</color>
-    <color name="handle_core_bottom">#4D0EA5E9</color>
-    <color name="handle_core_stroke">#8038BDF8</color>
+    <!-- Side handle: thin simple bar -->
+    <color name="handle_bar">#9938BDF8</color>
 
     <!-- Shimmer skeleton (checking state) -->
     <color name="skel_bar">#22FFFFFF</color>

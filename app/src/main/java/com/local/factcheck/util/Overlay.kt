@@ -88,7 +88,6 @@ class Overlay(
     private var lastResultText = ""
     private var lastState: PanelState = PanelState.Idle
     private var autoHide: Runnable? = null
-    private var breatheAnim: ValueAnimator? = null
     private var shimmerAnim: ValueAnimator? = null
 
     val visible: Boolean get() = handle != null
@@ -109,7 +108,7 @@ class Overlay(
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
         )
-        lp.gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        lp.gravity = Gravity.START or Gravity.CENTER_VERTICAL
         // Pull slightly inward: a flush-to-edge handle sits in the gesture-nav
         // back-swipe zone on many phones and touches there are eaten.
         lp.x = dp(6)
@@ -124,28 +123,8 @@ class Overlay(
         }
         handle = v
         handleParams = lp
-        startBreathing(v)
         v.setOnTouchListener(handleTouchListener())
         claimHandleFromGestures(v)
-    }
-
-    /** Slow breathing halo (alpha loop). Runs only while the handle is shown. */
-    private fun startBreathing(v: View) {
-        val glow = v.findViewById<View>(R.id.handle_glow) ?: return
-        breatheAnim?.cancel()
-        val a = ValueAnimator.ofFloat(0.18f, 0.85f).apply {
-            duration = 1600
-            repeatMode = ValueAnimator.REVERSE
-            repeatCount = ValueAnimator.INFINITE
-            addUpdateListener { anim -> glow.alpha = anim.animatedValue as Float }
-        }
-        a.start()
-        breatheAnim = a
-    }
-
-    private fun stopBreathing() {
-        breatheAnim?.cancel()
-        breatheAnim = null
     }
 
     /** Excludes the handle's bounds from the system back-gesture swipe zone. */
@@ -166,24 +145,37 @@ class Overlay(
 
     private fun handleTouchListener() = View.OnTouchListener { view, ev ->
         val lp = handleParams ?: return@OnTouchListener false
-        val core = view.findViewById<View>(R.id.handle_core)
+        val bar = view.findViewById<View>(R.id.handle_bar)
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 downY = ev.rawY
-                handleYOffset = lp.y
                 dragging = false
-                core?.animate()?.cancel()
-                core?.animate()?.scaleX(0.82f)?.scaleY(0.82f)?.setDuration(90)?.start()
+                bar?.animate()?.cancel()
+                bar?.animate()?.scaleX(0.82f)?.scaleY(0.82f)?.setDuration(90)?.start()
             }
             MotionEvent.ACTION_MOVE -> {
                 val d = ev.rawY - downY
                 if (!dragging && abs(d) > dp(10)) dragging = true
                 if (dragging) {
-                    core?.animate()?.cancel()
-                    core?.scaleX = 1f
-                    core?.scaleY = 1f
-                    handleYOffset += d.toInt()
-                    lp.gravity = Gravity.END or Gravity.TOP
+                    bar?.animate()?.cancel()
+                    bar?.scaleX = 1f
+                    bar?.scaleY = 1f
+                    // lp.y means different things per gravity: under
+                    // CENTER_VERTICAL it is an offset from the middle, under
+                    // TOP it is an absolute offset from the screen top. The
+                    // handle is added centered, so the first drag must switch
+                    // gravity using the window's real on-screen position —
+                    // reusing the centered-mode lp.y as an absolute one is
+                    // what made the handle jump to the top.
+                    val centered = lp.gravity == (Gravity.START or Gravity.CENTER_VERTICAL)
+                    if (centered) {
+                        val loc = IntArray(2)
+                        view.getLocationOnScreen(loc)
+                        handleYOffset = loc[1] + d.toInt()
+                        lp.gravity = Gravity.START or Gravity.TOP
+                    } else {
+                        handleYOffset += d.toInt()
+                    }
                     lp.y = handleYOffset
                     try {
                         wm.updateViewLayout(view, lp)
@@ -193,8 +185,8 @@ class Overlay(
                 }
             }
             MotionEvent.ACTION_UP -> {
-                core?.animate()?.cancel()
-                core?.animate()?.scaleX(1f)?.scaleY(1f)?.setDuration(140)
+                bar?.animate()?.cancel()
+                bar?.animate()?.scaleX(1f)?.scaleY(1f)?.setDuration(140)
                     ?.setInterpolator(DecelerateInterpolator(1.5f))?.start()
                 if (!dragging) {
                     view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
@@ -202,9 +194,9 @@ class Overlay(
                 }
             }
             MotionEvent.ACTION_CANCEL -> {
-                core?.animate()?.cancel()
-                core?.scaleX = 1f
-                core?.scaleY = 1f
+                bar?.animate()?.cancel()
+                bar?.scaleX = 1f
+                bar?.scaleY = 1f
             }
             else -> {}
         }
@@ -348,7 +340,6 @@ class Overlay(
     }
 
     fun hideAll() {
-        stopBreathing()
         hidePanelInternal(animated = false)
         handle?.let {
             try {

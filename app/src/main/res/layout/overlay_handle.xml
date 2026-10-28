@@ -2,21 +2,11 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/handle_root"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:padding="8dp">
-
-    <!-- Breathing halo, animated from Overlay.startBreathing() -->
-    <View
-        android:id="@+id/handle_glow"
-        android:layout_width="36dp"
-        android:layout_height="76dp"
-        android:layout_gravity="center"
-        android:background="@drawable/handle_glow" />
+    android:layout_height="wrap_content">
 
     <View
-        android:id="@+id/handle_core"
-        android:layout_width="14dp"
-        android:layout_height="52dp"
-        android:layout_gravity="center"
-        android:background="@drawable/handle_core" />
+        android:id="@+id/handle_bar"
+        android:layout_width="6dp"
+        android:layout_height="46dp"
+        android:background="@drawable/handle_bar" />
 </FrameLayout>
